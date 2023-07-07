@@ -1,0 +1,101 @@
+---
+title: "Untitled"
+format: html
+---
+
+Detect and remove outliers.
+
+```{r}
+library(here)
+library(data.table)
+library(dplyr)
+```
+
+Load data and convert to factor
+
+```{r}
+data_fr <- fread(here("output", "reference_Friedericke_2018.csv"), dec=",")
+data_harz <- fread(here("output", "reference_Harz_2021.csv"), dec=",")
+```
+
+```{r}
+boxplot(savi_diff ~ damage_class, data = data_fr)
+boxplot(savi_diff ~ damage_class, data = data_harz)
+```
+
+Function to detect outliers
+
+```{r}
+  # Tukeys fences
+thresh = 1.5
+isnt_out_tukey <- function(x, k = thresh, na.rm = TRUE) {
+  quar <- quantile(x, probs = c(0.25, 0.75), na.rm = na.rm)
+  iqr <- diff(quar)
+  
+  x[(quar[1] - k * iqr > x) | (x > quar[2] + k * iqr)] <- NA
+  x
+}
+
+calc_outliers <- function(dat, variables, group_var){
+  dat %>% 
+  group_by({{group_var}}) %>%
+  mutate_at(variables, isnt_out_tukey) %>% 
+  ungroup()
+}
+```
+
+Select the columns where to filter the outliers and filter.
+
+```{r}
+cols_outliers <- names(data_fr)[names(data_fr)!= c("ID", "Jahr", "damage_type", "damage_class")]  
+
+data_fr_clean <- calc_outliers(data_fr, cols_outliers, damage_class)
+data_harz_clean <- calc_outliers(data_harz, cols_outliers, damage_class)
+```
+
+Save
+
+```{r}
+#write.csv2(data_fr_clean, here("output", "reference_Friedericke_2018_clean.csv"), row.names=FALSE) 
+#write.csv2(data_harz_clean, here("output", "reference_Harz_2021_clean.csv"), row.names=FALSE) 
+```
+
+Damage class
+
+```{r}
+boxplot(ndwi_diff ~ damage_class, data = data_fr)
+boxplot(ndwi_diff ~ damage_class, data = data_fr_clean)
+
+```
+
+```{r}
+boxplot(savi_diff ~ damage_class, data = data_harz)
+boxplot(savi_diff ~ damage_class, data = data_harz_clean)
+
+```
+
+```{r}
+boxplot(nbr_diff ~ damage_class, data = data_fr_clean)
+boxplot(nbr_diff ~ damage_class, data = data_harz_clean)
+
+```
+
+Damage type
+
+```{r}
+boxplot(ndwi_diff ~ damage_type, data = data_fr)
+boxplot(ndwi_diff ~ damage_type, data = data_fr_clean)
+
+```
+
+```{r}
+boxplot(savi_diff ~ damage_type, data = data_harz)
+boxplot(savi_diff ~ damage_type, data = data_harz_clean)
+
+```
+
+```{r}
+boxplot(re3_diff ~ damage_type, data = data_fr_clean)
+boxplot(re3_diff ~ damage_type, data = data_harz_clean)
+
+```

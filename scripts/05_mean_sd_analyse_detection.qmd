@@ -1,0 +1,103 @@
+---
+title: "mean_sd_analyse_detection"
+format: html
+---
+
+Choose the best index for damage detection. Input spectral values from S2-images of the current and past year and the difference of these values + reference data as points with class damage and no damage. For each variable (index, band) two calculations are performed: the difference between the mean of the population damage and the population no damage and the mean value of the standard deviation of both populations. Best case scenario is a big difference between both classes and a small standard deviation in the classes. Results combining these two metrics as plot and as ratio.
+
+From spectral values and indices from S2-images
+
+```{r}
+library(caret)
+library(here)
+library(data.table)
+library(dplyr)
+library(ggplot2)
+```
+
+Function definition:
+
+-   Function to normalize values
+
+-   Function to calculate the difference between the means of two populations
+
+-   Function to calculate the mean value of the standard deviation of two populations
+
+```{r}
+min_max_norm <- function(x) {
+    (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+  }
+
+mean_diff <- function(value_damage, value_nodamage){
+  mean1 <- lapply(value_damage, mean)
+  mean2 <- lapply(value_nodamage, mean)
+  diff <- mapply('-', mean1, mean2, SIMPLIFY=FALSE)
+  abs_diff <- lapply(diff, abs)
+  return(data.table(t(as.data.frame(abs_diff))))
+}
+
+sd_mean <- function(value_damage, value_nodamage){
+  sd1 <- lapply(value_damage, sd)
+  sd2 <- lapply(value_nodamage, sd)
+  sd <- as.data.frame(rbind(unlist(sd1),unlist(sd2)))
+  mean <- data.table(as.data.frame(colMeans(sd)))
+
+  return(mean)
+}
+```
+
+Read data: extracted spectral and index values to points. Data from Friedericke 2018 (mainly Freifläche) and from Harz 2021 (mainly stehendes Totholz)
+
+```{r}
+d1 <- fread(here("output", "reference_Friedericke_2018_clean.csv"), dec = ",")
+d2 <- fread(here("output", "reference_Harz_2021_clean.csv"), dec = ",")
+d <- rbind(d1,d2)
+
+rm(d1,d2)
+#d <- d %>% mutate_at("damage_class", as.factor)
+
+# only columns diff values
+d_diff <- d[ , c(grepl("diff" , names( d ))), with=FALSE ] 
+```
+
+Standardization of the spectral and index values
+
+```{r}
+d_norm <- as.data.frame((lapply(d_diff, min_max_norm))) 
+d_norm <- cbind(d_norm, d[,"damage_class"]) # bind damage class column again
+d_norm <- data.table(na.omit(d_norm))
+```
+
+Create two groups: damage and no damage and keep all columns except damage class because not needed from now on
+
+```{r}
+pop_nodam <- d_norm[d_norm$damage_class==0, -c("damage_class")] 
+pop_dam <- d_norm[d_norm$damage_class==1, -c("damage_class")]
+```
+
+Apply functions: difference between population means and mean standard deviation of populations
+
+```{r}
+datamean <- mean_diff(pop_dam, pop_nodam)
+datasd <- sd_mean(pop_dam, pop_nodam)
+```
+
+Create data frame
+
+```{r}
+names <- names(pop_dam)
+dataplot <- cbind(names, datamean, datasd)
+names(dataplot) <- c("var", "diff", "sd")
+dataplot$ratio <- dataplot$diff / dataplot$sd
+```
+
+Plot
+
+```{r}
+ggplot(dataplot,aes(x=diff,y=sd,col=var,label=var))+geom_point()+geom_text(hjust=0, vjust=0)
+
+```
+
+```{r}
+ggplot(dataplot, aes(x = reorder(var, -ratio), y = ratio, fill=var)) + geom_col() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + xlab("variable")
+```

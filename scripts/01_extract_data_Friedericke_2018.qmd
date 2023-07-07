@@ -1,0 +1,146 @@
+---
+title: "extract_data_Friedericke2018"
+---
+
+### Friedericke 2017-2018
+
+Script to extract the spectral values (bands and indices) and their temporal differences of two sentinel images (present, past) to the reference points with class damage and not damage and with damage type information.
+
+```{r}
+library(here)
+library(terra)
+library(data.table)
+library(dplyr)
+library(stringr)
+source(local=TRUE, "functions.R")
+```
+
+### Load data
+
+#### Load raster data
+
+For UNC present 2 images are combined because in present/07/24 it was cloudy in Harz.
+
+The UNC and UNB rasters within a year were merged in QGIS (with R session crashed).
+
+Load images from the tiles UNC and UNB for the years past and present.
+
+```{r}
+rpast <- rast(im2list("D:\\wsf-sat\\data\\validation\\Friedericke_2018\\Merge_UNC_UNB_20170823_GTiff_shift_TC.tif"))
+rpresent <- rast(im2list("D:\\wsf-sat\\data\\validation\\Friedericke_2018\\Merge_UNC_UNB_20180719_20180724_GTiff_shift_TC_na.tif"))
+names(rpast) <- paste(names(rpast), '_past', sep="")
+names(rpresent) <- paste(names(rpresent), '_present', sep="")
+```
+
+#### Load geometry data
+
+```{r}
+# Geometries
+damage_polygons <- vect(here("data", "Friedericke_2018_damage_areas.gpkg"), layer = "filter025")
+no_damage_points <- vect(here("data", "Referenz_NichtSchaden_randompoints_Friedericke_2018.gpkg"))
+
+damage_polygons_table <- data.table(as.data.frame(damage_polygons))
+no_damage_points_table <- data.table(as.data.frame(no_damage_points))
+```
+
+#### Prepare geometry data
+
+Select only necessary columns and adjust values
+
+Damage classes: 1 -\> stehendes Totholz, 2 -\> lliegendes Totholz, 3-\> Freifläche
+
+```{r}
+# Use objektart to classify in damage class, then drop it 
+damage_polygons_table <- 
+  damage_polygons_table %>%
+  select("Objektart", "Jahr") %>% 
+  mutate(damage_type = case_when(
+    Objektart == 10 ~ 3, # windwurf geräumt to Freifläche
+    Objektart == 20 ~ 2, # windwurf ungeräumt to liegendes Totholz
+    Objektart == 21 ~ 3, # kahlflächen ohne ursache to Freifläche
+    Objektart ==30 ~ 1 # stehendes Totholz to stehendes Totholz
+  ))  %>% 
+  select(-"Objektart") %>%
+  mutate(damage_class = 1)
+```
+
+#### Calculate difference bands
+
+Calculate and save difference raster present - past
+
+```{r}
+rdiff <- rpresent - rpast
+names(rdiff) <- str_replace(names(rdiff), "_present", "_diff")
+
+#writeRaster(rdiff, filename=here("output", "Friedericke_2018_bands.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+```
+
+#### Calculate indices and differences
+
+Define bands and calculate indices
+
+```{r}
+# List with rasters
+indices_past <- calculate_indices(rpast)
+indices_present <- calculate_indices(rpresent)
+
+names(indices_past) <- paste(names(indices_past), '_past', sep="")
+names(indices_present) <- paste(names(indices_present), '_present', sep="")
+
+# Multiband rasters
+rindices_past <- rast(indices_past)
+rindices_present <- rast(indices_present)
+```
+
+Calculate differences
+
+```{r}
+rindices_diff <- rindices_present - rindices_past
+names(rindices_diff) <- str_replace(names(rindices_diff), "_present", "_diff")
+
+#writeRaster(rindices_past, filename=here("output", "Friedericke_2018_indices_past.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+#writeRaster(rindices_present, filename=here("output", "Friedericke_2018_indices_present.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+#writeRaster(rindices_diff, filename=here("output", "Friedericke_2018_indices_diff.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+```
+
+#### Prepare extract raster
+
+Join raster with bands values and raster with indices values
+
+```{r}
+rextract <- c(rpast, rpresent, rdiff, rindices_past, rindices_present, rindices_diff)
+rm(rpast, rpresent, rdiff, rindices_past, rindices_present, rindices_diff)
+```
+
+#### Extract data to points
+
+Extract image values to damage polygons and to no damage points
+
+```{r}
+extract_values_damage <- extract(rextract, damage_polygons) 
+extract_values_no_damage <- extract(rextract, no_damage_points) 
+```
+
+Merge table with the extracted values with table with attributes damage type, damage class and year
+
+```{r}
+damage_polygons_table$ID <- rownames(damage_polygons_table) # write rowid in column
+extract_values_damage <- merge(extract_values_damage, damage_polygons_table)
+```
+
+Add attributes damage type, damage class and year to the no damage table and create unique id that are not given in the damage table
+
+```{r}
+extract_values_no_damage$Jahr <- 2018 
+extract_values_no_damage$damage_type <- NA 
+extract_values_no_damage$damage_class <- 0  
+extract_values_no_damage$ID <- extract_values_no_damage$ID + max(extract_values_damage$ID)
+```
+
+Bind both tables: damage and no damage and save data
+
+```{r}
+extract_values_all <- rbind(extract_values_damage, extract_values_no_damage) 
+write.csv2(extract_values_all, here("output", "reference_Friedericke_2018.csv"), row.names=FALSE) 
+names(extract_values_all)
+```
