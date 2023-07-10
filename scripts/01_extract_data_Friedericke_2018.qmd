@@ -89,7 +89,7 @@ names(indices_present) <- paste(names(indices_present), '_present', sep="")
 
 # Multiband rasters
 rindices_past <- rast(indices_past)
-rindices_present <- rast(indices_present)
+rindices_present <- rast(indices_present) 
 ```
 
 Calculate differences
