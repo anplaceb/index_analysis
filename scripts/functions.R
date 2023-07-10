@@ -42,10 +42,10 @@ calculate_indices <- function(image){
          'ndwi' = lapp(x = c(bands$green, bands$nir), fun=norm_diff),
          'i1' = lapp(x = c(bands$re1, bands$red), fun=norm_diff),
          'i2' = lapp(x = c(bands$re1, bands$swir1), fun=norm_diff),
-         i3 = lapp(x = c(bands$re1, bands$swir2), fun=norm_diff),
-         i4 = lapp(x = c(bands$red, bands$swir1), fun=norm_diff),
-         i5 = lapp(x = c(bands$red, bands$swir2), fun=norm_diff),
-         i6 = lapp(x = c(bands$swir1, bands$swir2), fun=norm_diff)
+         'i3' = lapp(x = c(bands$re1, bands$swir2), fun=norm_diff),
+         'i4' = lapp(x = c(bands$red, bands$swir1), fun=norm_diff),
+         'i5' = lapp(x = c(bands$red, bands$swir2), fun=norm_diff),
+         'i6' = lapp(x = c(bands$swir1, bands$swir2), fun=norm_diff)
          ))
 }
  

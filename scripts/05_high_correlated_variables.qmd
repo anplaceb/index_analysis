@@ -1,0 +1,92 @@
+---
+title: "high_correlated_variables"
+format: html
+---
+
+```{r}
+library(dplyr)
+library(corrplot)
+```
+
+Looks for high correlated variables
+
+Load data from Friedericke 2018 and Harz 2021
+
+```{r}
+Friedericke2018_data <- fread(here("output", "reference_Friedericke_2018_clean.csv"), dec = ",")
+Harz2021_data <- fread(here("output", "reference_Harz_2021_clean.csv"), dec = ",")
+```
+
+Merge both datasets
+
+```{r}
+# Each geometry has to have a unique ID before merging
+Harz2021_data$ID <- Harz2021_data$ID + max(Friedericke2018_data$ID)
+reference_data <- rbind(Friedericke2018_data, Harz2021_data)
+#write.csv2(reference_data, here("output", "reference_Harz_Friedericke_2021_2018.csv"), row.names=FALSE)
+```
+
+Remove highly correlated variables
+
+```{r}
+data2cor <- reference_data %>% select(!c("ID", "Jahr", "damage_type", "damage_class"))
+
+data2cor <- reference_data %>% select(c("i7_diff", "nbr_diff", "ndvi_diff", "swir2_diff", "swir1_diff", "red_diff", "i6_diff", "ndwi_diff", "gndvi_diff", "swir1_past"))
+
+
+correlation_matrix <- cor(data2cor, use="complete.obs")
+corrplot(cor(na.omit(data2cor)), method="number")
+
+test <- as.data.frame(correlation_matrix) %>% 
+       select(all_of(variables_stay))
+
+
+# 
+cols2remove <- findCorrelation(correlation_matrix, cutoff = 0.80)
+cols2remove <- sort(cols2remove)
+
+variables_stay <- colnames(correlation_matrix[,-c(cols2remove)])
+variables_stay
+reference_data_nocorr <- reference_data[,c(variables_stay, "ID", "Jahr", "damage_type", "damage_class")]
+#write.csv2(reference_data_nocorr, here("output", "reference_Harz_Friedericke_2021_2018_lowCorr.csv"), row.names=FALSE)
+
+test <- as.data.frame(correlation_matrix) %>% select(nbr_diff)
+```
+
+\#########
+
+Calculate neighbor values mean and sd
+
+```{r}
+# run loop to create RasterStack with weighted mean of 
+# neighbour values for each pixel and each band
+m=matrix(c(1, 2, 1, 2, 0, 2, 1, 2, 1), ncol=3, nrow=3)
+rs_focal=focal(rpast[[1]], fun=mean, w=m) # the first layer
+for (i in 2:nlyr(rpast)) # the rest of the layers
+{
+rl=focal(rpast[[i]], fun=mean, w=m)
+rs_focal=c(rs_focal, rl)
+}
+names(rs_focal)=paste(names(rpast))
+#end of loop
+
+#run loop to create RasterStack with standard deviation within band for
+#set of pixels for each band
+m=matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 1), ncol=3, nrow=3)
+rs_focal_sd=focal(img_2017_2dates_4band[[1]], fun=sd, w=m)
+for (i in 2:nlayers(img_2017_2dates_4band))
+{
+rl=focal(img_2017_2dates_4band[[i]], fun=sd, w=m)
+rs_focal_sd=stack(rs_focal_sd, rl)
+}
+names(rs_focal_sd)=paste(names(img_2017_2dates_4band), "f")
+#end of loop
+
+
+img_focal=stack(img, rs_focal_n, rs_focal_sd)
+roi_data=extract(x=img_layers, y=trainData, df=TRUE) #where trainData is  training polygon for classification
+roi_data$class <- as.factor(trainData$Class_num[roi_data$ID])#assign class to each row as a column
+#rf <- randomForest(class ~ ., data=roi_data[,c(2:ncol(roi_data)], importance=TRUE)
+```
+
+### 
