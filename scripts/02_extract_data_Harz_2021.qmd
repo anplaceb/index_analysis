@@ -8,6 +8,7 @@ format: html
 Script to extract the spectral values (bands and indices) and their temporal differences of two sentinel images (present, past) to the reference points with class damage and not damage and with damage type information.
 
 ```{r}
+renv::restore
 library(here)
 library(terra)
 library(data.table)
