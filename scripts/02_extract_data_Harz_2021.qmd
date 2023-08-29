@@ -24,19 +24,17 @@ source(local=TRUE, "functions.R")
 Load images from the tiles UNC and UNB for the years past and present.
 
 ```{r}
-rpast <- rast(im2list("D:\\wsf-sat\\methods\\reference_data\\Harz_2021\\Merge_UNC_UPC_2020_GTiff_shift_TC.tif"))
-rpresent <- rast(im2list("D:\\wsf-sat\\methods\\reference_data\\Harz_2021\\Merge_UNC_UPC_2021_GTiff_shift_TC.tif"))
+rpast <- rast(im2list("D:\\wsf-sat\\data\\validation\\Harz_2021\\Merge_UNC_UPC_2020_GTiff_shift_TC.tif"))
+rpresent <- rast(im2list("D:\\wsf-sat\\data\\validation\\Harz_2021\\Merge_UNC_UPC_2021_GTiff_shift_TC.tif"))
 names(rpast) <- paste(names(rpast), '_past', sep="")
 names(rpresent) <- paste(names(rpresent), '_present', sep="")
-
-
 ```
 
 #### Load geometry data
 
 ```{r}
 # Geometries
-damage_polygons <- vect(here("data", "Harz_Freiflaeche_stehendesTotholz_2021.gpkg"), layer="filter025")
+damage_polygons <- vect("D:\\wsf-sat\\data\\validation\\Harz_2021\\Harz_Freiflaeche_stehendesTotholz_2021.gpkg", layer="filter025")
 no_damage_points <- vect(here("data", "Referenz_NichtSchaden_randompoints_Harz_2021.gpkg"))
 
 damage_polygons_table <- data.table(as.data.frame(damage_polygons))
@@ -51,8 +49,8 @@ Damage classes: 1 -\> stehendes Totholz, 2 -\> lliegendes Totholz, 3-\> Freiflä
 
 ```{r}
 damage_polygons_table <- damage_polygons_table %>% 
-                            select("Jahr", "Typ_wsfsat")  %>% 
-                            rename("damage_type" = "Typ_wsfsat") %>%
+                            rename(year = Jahr, damage_type = Typ_wsfsat) %>% 
+                            select("year", "damage_type")  %>% 
                             mutate(damage_class = 1)
 ```
 
@@ -64,7 +62,7 @@ Calculate and save difference raster present - past
 rdiff <- rpresent - rpast
 names(rdiff) <- str_replace(names(rdiff), "_present", "_diff")
 
-#writeRaster(rdiff, filename=here("output", "Harz_2021_bands.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+writeRaster(rdiff, filename=here("output", "Harz_2021_bands.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
 ```
 
 #### Calculate indices and differences
@@ -90,9 +88,9 @@ Calculate differences
 rindices_diff <- rindices_present - rindices_past
 names(rindices_diff) <- str_replace(names(rindices_diff), "_present", "_diff")
 
-#writeRaster(rindices_past, filename=here("output", "Harz_2021_indices_past.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
-#writeRaster(rindices_present, filename=here("output", "Harz_2021_indices_present.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
-#writeRaster(rindices_diff, filename=here("output", "Harz_2021_indices_diff.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+writeRaster(rindices_past, filename=here("output", "Harz_2021_indices_past.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+writeRaster(rindices_present, filename=here("output", "Harz_2021_indices_present.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+writeRaster(rindices_diff, filename=here("output", "Harz_2021_indices_diff.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
 
 ```
 
@@ -124,7 +122,7 @@ extract_values_damage <- merge(extract_values_damage, damage_polygons_table)
 No damage data: Add attributes damage type, damage class and year to the no damage table and create unique id that are not given in the damage table
 
 ```{r}
-extract_values_no_damage$Jahr <- 2018 
+extract_values_no_damage$year <- 2018 
 extract_values_no_damage$damage_type <- NA 
 extract_values_no_damage$damage_class <- 0  
 extract_values_no_damage$ID <- extract_values_no_damage$ID + max(extract_values_damage$ID)

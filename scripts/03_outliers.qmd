@@ -19,8 +19,8 @@ data_harz <- fread(here("output", "reference_Harz_2021.csv"), dec=",")
 ```
 
 ```{r}
-boxplot(savi_diff ~ damage_class, data = data_fr)
-boxplot(savi_diff ~ damage_class, data = data_harz)
+boxplot(nbr_diff ~ damage_class, data = data_fr, main = 'Friedericke')
+boxplot(nbr_diff ~ damage_class, data = data_harz, main = 'Harz')
 ```
 
 Function to detect outliers
@@ -56,8 +56,8 @@ data_harz_clean <- calc_outliers(data_harz, cols_outliers, damage_class)
 Save
 
 ```{r}
-#write.csv2(data_fr_clean, here("output", "reference_Friedericke_2018_clean.csv"), row.names=FALSE) 
-#write.csv2(data_harz_clean, here("output", "reference_Harz_2021_clean.csv"), row.names=FALSE) 
+write.csv2(data_fr_clean, here("output", "reference_Friedericke_2018_clean.csv"), row.names=FALSE) 
+write.csv2(data_harz_clean, here("output", "reference_Harz_2021_clean.csv"), row.names=FALSE) 
 ```
 
 Damage class
@@ -75,8 +75,8 @@ boxplot(savi_diff ~ damage_class, data = data_harz_clean)
 ```
 
 ```{r}
-boxplot(nbr_diff ~ damage_class, data = data_fr_clean)
-boxplot(nbr_diff ~ damage_class, data = data_harz_clean)
+boxplot(nbr_diff ~ damage_class, data = data_fr_clean, main = 'Friedericke')
+boxplot(nbr_diff ~ damage_class, data = data_harz_clean, main = 'Harz')
 
 ```
 
