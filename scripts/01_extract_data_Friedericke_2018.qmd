@@ -28,6 +28,7 @@ Load images from the tiles UNC and UNB for the years past and present.
 ```{r}
 rpast <- rast(im2list("D:\\wsf-sat\\data\\validation\\Friedericke_2018\\Merge_UNC_UNB_20170823_GTiff_shift_TC.tif"))
 rpresent <- rast(im2list("D:\\wsf-sat\\data\\validation\\Friedericke_2018\\Merge_UNC_UNB_20180719_20180724_GTiff_shift_TC_na.tif"))
+
 names(rpast) <- paste(names(rpast), '_past', sep="")
 names(rpresent) <- paste(names(rpresent), '_present', sep="")
 ```
@@ -73,7 +74,7 @@ Calculate and save difference raster present - past
 rdiff <- rpresent - rpast
 names(rdiff) <- str_replace(names(rdiff), "_present", "_diff")
 
-writeRaster(rdiff, filename=here("output", "Friedericke_2018_bands.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+#writeRaster(rdiff, filename=here("output", "Friedericke_2018_bands.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
 ```
 
 #### Calculate indices and differences

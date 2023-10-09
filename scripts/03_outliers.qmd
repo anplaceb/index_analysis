@@ -14,7 +14,7 @@ library(dplyr)
 Load data and convert to factor
 
 ```{r}
-data_fr <- fread(here("output", "reference_Friedericke_2018.csv"), dec=",")
+data_fr <- fread(here("output", "reference_Friedericke_2019.csv"), dec=",")
 data_harz <- fread(here("output", "reference_Harz_2021.csv"), dec=",")
 ```
 
@@ -47,7 +47,7 @@ calc_outliers <- function(dat, variables, group_var){
 Select the columns where to filter the outliers and filter.
 
 ```{r}
-cols_outliers <- names(data_fr)[names(data_fr)!= c("ID", "Jahr", "damage_type", "damage_class")]  
+cols_outliers <- names(data_fr %>% select(-c(ID, year, damage_type, damage_class)))
 
 data_fr_clean <- calc_outliers(data_fr, cols_outliers, damage_class)
 data_harz_clean <- calc_outliers(data_harz, cols_outliers, damage_class)
@@ -56,7 +56,7 @@ data_harz_clean <- calc_outliers(data_harz, cols_outliers, damage_class)
 Save
 
 ```{r}
-write.csv2(data_fr_clean, here("output", "reference_Friedericke_2018_clean.csv"), row.names=FALSE) 
+write.csv2(data_fr_clean, here("output", "reference_Friedericke_2019_clean.csv"), row.names=FALSE) 
 write.csv2(data_harz_clean, here("output", "reference_Harz_2021_clean.csv"), row.names=FALSE) 
 ```
 

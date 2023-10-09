@@ -122,7 +122,7 @@ extract_values_damage <- merge(extract_values_damage, damage_polygons_table)
 No damage data: Add attributes damage type, damage class and year to the no damage table and create unique id that are not given in the damage table
 
 ```{r}
-extract_values_no_damage$year <- 2018 
+extract_values_no_damage$year <- 2021 
 extract_values_no_damage$damage_type <- NA 
 extract_values_no_damage$damage_class <- 0  
 extract_values_no_damage$ID <- extract_values_no_damage$ID + max(extract_values_damage$ID)

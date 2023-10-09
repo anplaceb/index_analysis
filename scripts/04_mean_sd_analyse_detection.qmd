@@ -49,8 +49,11 @@ sd_mean <- function(value_damage, value_nodamage){
 Read data: extracted spectral and index values to points. Data from Friedericke 2018 (mainly Freifläche) and from Harz 2021 (mainly stehendes Totholz). Nur Index-Differenzen werden beachtet.
 
 ```{r}
-d1 <- fread(here("output", "reference_Friedericke_2018_clean.csv"), dec = ",")
+d1 <- fread(here("output", "reference_Friedericke_2019_clean.csv"), dec = ",")
 d2 <- fread(here("output", "reference_Harz_2021_clean.csv"), dec = ",")
+
+d2$ID <- d2$ID + max(d1$ID) # to ensure an unique ID for each polygon after merging dataframes
+
 d <- rbind(d1,d2)
 
 rm(d1,d2)
