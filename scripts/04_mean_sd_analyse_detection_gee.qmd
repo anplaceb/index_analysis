@@ -1,5 +1,5 @@
 ---
-title: "mean_sd_analyse_detection"
+title: "mean_sd_analyse_detection_gee"
 format: html
 ---
 
@@ -49,8 +49,8 @@ sd_mean <- function(value_damage, value_nodamage){
 Read data: extracted spectral and index values to points. Data from Friedericke 2018 (mainly Freifläche) and from Harz 2021 (mainly stehendes Totholz). Nur Index-Differenzen werden beachtet.
 
 ```{r}
-d1 <- fread(here("output", "reference_Friedericke_2018_clean.csv"), dec = ",")
-d2 <- fread(here("output", "reference_Harz_2021_clean.csv"), dec = ",")
+d1 <- fread(here("output", "reference_Friedericke_2019_clean_gee.csv"), dec = ",")
+d2 <- fread(here("output", "reference_Harz_2021_clean_gee.csv"), dec = ",")
 
 d2$ID <- d2$ID + max(d1$ID) # to ensure an unique ID for each polygon after merging dataframes
 
@@ -101,14 +101,16 @@ Plot
 
 ```{r}
 # only diff columns with spectral values
+
 dataplot_diff <- dataplot %>%
   filter(grepl("_diff$", var))
 
 
 Index <- sub("\\_.*", "", dataplot_diff$var) # remove _diff to visualize better
-ggplot(dataplot_diff,aes(x=diff, y=sd, color=Index,label=Index))+geom_point()+
+ggplot(dataplot_diff,aes(x=diff, y=sd, col=Index,label=Index))+geom_point()+
   geom_text(hjust=1, vjust=0, check_overlap=FALSE) + xlab("Differenz der Mittelwerte") + 
-  ylab("Mittlere Standardabweichung")+ ylim(0.075, 0.175)  + labs(color = "Spektrale Differenzen")
+  ylab("Mittlere Standardabweichung")+ ylim(0.075, 0.175) + labs(color = "Spektrale Differenzen")
+
 
 ```
 
@@ -116,7 +118,8 @@ ggplot(dataplot_diff,aes(x=diff, y=sd, color=Index,label=Index))+geom_point()+
 # all columns with spectral values
 ggplot(dataplot,aes(x=diff, y=sd, label=dataplot$var))+geom_point()+
   geom_text(hjust=1, vjust=0, check_overlap=FALSE) + xlab("Differenz der Mittelwerte") + 
-  ylab("Mittlere Standardabweichung")
+  ylab("Mittlere Standardabweichung") 
+
 
 ```
 

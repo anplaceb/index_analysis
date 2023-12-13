@@ -88,9 +88,9 @@ Calculate differences
 rindices_diff <- rindices_present - rindices_past
 names(rindices_diff) <- str_replace(names(rindices_diff), "_present", "_diff")
 
-writeRaster(rindices_past, filename=here("output", "Harz_2021_indices_past.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
-writeRaster(rindices_present, filename=here("output", "Harz_2021_indices_present.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
-writeRaster(rindices_diff, filename=here("output", "Harz_2021_indices_diff.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+#writeRaster(rindices_past, filename=here("output", "Harz_2021_indices_past.tif"), #filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+#writeRaster(rindices_present, filename=here("output", "Harz_2021_indices_present.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
+#writeRaster(rindices_diff, filename=here("output", "Harz_2021_indices_diff.tif"), filetype="GTiff", datatype='INT4S', overwrite=TRUE)  
 
 ```
 

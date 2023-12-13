@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Outliers"
 format: html
 ---
 
@@ -14,13 +14,13 @@ library(dplyr)
 Load data and convert to factor
 
 ```{r}
-data_fr <- fread(here("output", "reference_Friedericke_2019.csv"), dec=",")
+data_fr <- fread(here("output", "reference_Friedericke_2018.csv"), dec=",")
 data_harz <- fread(here("output", "reference_Harz_2021.csv"), dec=",")
 ```
 
 ```{r}
-boxplot(nbr_diff ~ damage_class, data = data_fr, main = 'Friedericke')
-boxplot(nbr_diff ~ damage_class, data = data_harz, main = 'Harz')
+boxplot(nbr_diff ~ damage_class, data = data_fr, ylim = c(-100, 100), col = c("grey", "tomato1"), main = 'Friederike 2018', ylab= "nbr Differenz", xlab = "Schadart", names = c("Kein Schaden", "Schaden"))
+boxplot(nbr_diff ~ damage_class, data = data_harz, ylim = c(-100, 100), col = c("grey", "tomato1"), main = 'Harz 2021', ylab= "nbr Differenz", xlab = "Schadart", names = c("Kein Schaden", "Schaden"))
 ```
 
 Function to detect outliers
@@ -56,17 +56,11 @@ data_harz_clean <- calc_outliers(data_harz, cols_outliers, damage_class)
 Save
 
 ```{r}
-write.csv2(data_fr_clean, here("output", "reference_Friedericke_2019_clean.csv"), row.names=FALSE) 
+write.csv2(data_fr_clean, here("output", "reference_Friederike_2018_clean.csv"), row.names=FALSE) 
 write.csv2(data_harz_clean, here("output", "reference_Harz_2021_clean.csv"), row.names=FALSE) 
 ```
 
 Damage class
-
-```{r}
-boxplot(ndwi_diff ~ damage_class, data = data_fr)
-boxplot(ndwi_diff ~ damage_class, data = data_fr_clean)
-
-```
 
 ```{r}
 boxplot(savi_diff ~ damage_class, data = data_harz)
@@ -75,9 +69,21 @@ boxplot(savi_diff ~ damage_class, data = data_harz_clean)
 ```
 
 ```{r}
-boxplot(nbr_diff ~ damage_class, data = data_fr_clean, main = 'Friedericke')
-boxplot(nbr_diff ~ damage_class, data = data_harz_clean, main = 'Harz')
+boxplot(nbr_diff ~ damage_class, data = data_fr_clean, ylim = c(-100, 100), col = c("grey", "tomato1"), main = 'Friederike 2018', ylab= "nbr Differenz", xlab = "Schadart", names = c("Kein Schaden", "Schaden"))
 
+boxplot(nbr_diff ~ damage_class, data = data_harz_clean, ylim = c(-100, 100), col = c("grey", "tomato1"), main = 'Harz 2021', ylab= "nbr Differenz", xlab = "Schadart", names = c("Kein Schaden", "Schaden"))
+
+```
+
+```{r}
+par(mfrow = c(1, 2), oma=c(0,0,2,0))
+boxplot(nbr_diff ~ damage_class, data = data_fr, ylim = c(-100, 100), col = c("grey", "tomato1"), main = 'Mit Ausreißer', ylab= "nbr Differenz", xlab = "Schadart", names = c("Kein Schaden", "Schaden"))
+mtext("A", side=3, line=1, cex=2, adj=-0.05)
+
+boxplot(nbr_diff ~ damage_class, data = data_fr_clean, ylim = c(-100, 100), col = c("grey", "tomato1"), main = 'Ohne Ausreißer', ylab= "nbr Differenz", xlab = "Schadart", names = c("Kein Schaden", "Schaden"))
+
+mtext("Friederike 2018", line=0, side=3, outer=TRUE, cex=1.5)
+mtext("B", side=3, line=1, cex=2, adj=-0.05)
 ```
 
 Damage type
